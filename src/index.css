@@ -1,0 +1,36 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* TipTap editor base styles */
+.ProseMirror {
+  outline: none;
+  min-height: 400px;
+}
+
+.ProseMirror p {
+  margin: 0.5rem 0;
+}
+
+.ProseMirror h1 { @apply text-3xl font-bold my-3; }
+.ProseMirror h2 { @apply text-2xl font-bold my-2; }
+.ProseMirror h3 { @apply text-xl font-semibold my-2; }
+
+.ProseMirror ul { @apply list-disc pl-6 my-2; }
+.ProseMirror ol { @apply list-decimal pl-6 my-2; }
+
+.ProseMirror strong { @apply font-bold; }
+.ProseMirror em    { @apply italic; }
+.ProseMirror u     { @apply underline; }
+.ProseMirror s     { @apply line-through; }
+
+/* Placeholder */
+.ProseMirror p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  @apply text-gray-400 pointer-events-none float-left h-0;
+}
+
+/* Toolbar button active state */
+.toolbar-btn.is-active {
+  @apply bg-indigo-100 text-indigo-700;
+}
