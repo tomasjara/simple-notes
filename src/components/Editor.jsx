@@ -1,120 +1,209 @@
-import { useEffect, useRef } from 'react'
+import { useMemo, useState } from 'react'
+
+const STORAGE_KEY = 'simple-notes-editor'
+
+function loadStoredDoc() {
+  if (typeof window === 'undefined') return null
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY)
+    if (!raw) return null
+    return JSON.parse(raw)
+  } catch {
+    return null
+  }
+}
 import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
-import Underline from '@tiptap/extension-underline'
+import Placeholder from '@tiptap/extension-placeholder'
 import TextAlign from '@tiptap/extension-text-align'
-import { gsap } from 'gsap'
 import {
-  Bold, Italic, Underline as UnderlineIcon, Strikethrough,
-  AlignLeft, AlignCenter, AlignRight, AlignJustify,
-  List, ListOrdered, Undo2, Redo2,
-  Heading1, Heading2, Heading3,
+  Bold,
+  Italic,
+  Strikethrough,
+  Heading1,
+  Heading2,
+  List,
+  ListOrdered,
+  AlignLeft,
+  AlignCenter,
+  AlignRight,
+  AlignJustify,
+  EyeOff,
+  Eye,
 } from 'lucide-react'
 
-// ── Toolbar button ────────────────────────────────────────────────
-const Btn = ({ onClick, active, title, children }) => (
+const Btn = ({ active, title, onClick, children }) => (
   <button
-    onMouseDown={e => { e.preventDefault(); onClick() }}
+    type="button"
     title={title}
-    className={`toolbar-btn p-2 rounded-lg transition-colors duration-150 hover:bg-indigo-100 hover:text-indigo-700
-      ${active ? 'bg-indigo-100 text-indigo-700' : 'text-gray-600'}`}
+    onMouseDown={(e) => {
+      e.preventDefault()
+      onClick()
+    }}
+    className={`inline-flex h-9 w-9 items-center justify-center rounded-lg transition-colors ${
+      active
+        ? 'bg-gray-900 text-white'
+        : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+    }`}
   >
     {children}
   </button>
 )
 
-const Divider = () => <div className="w-px h-6 bg-gray-200 mx-1 self-center" />
-
-// ── Main component ────────────────────────────────────────────────
 export default function Editor() {
-  const toolbarRef = useRef(null)
+  const [compact, setCompact] = useState(false)
+  const initialContent = useMemo(() => loadStoredDoc() ?? '<p></p>', [])
 
   const editor = useEditor({
     extensions: [
       StarterKit,
-      Underline,
-      TextAlign.configure({ types: ['heading', 'paragraph'] }),
+      Placeholder.configure({
+        placeholder: 'Escribe...',
+      }),
+      TextAlign.configure({
+        types: ['heading', 'paragraph'],
+      }),
     ],
-    content: '<p>Empieza a escribir aquí...</p>',
+    content: initialContent,
+    onUpdate: ({ editor: ed }) => {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(ed.getJSON()))
+      } catch {
+        /* ignore quota / private mode */
+      }
+    },
     editorProps: {
       attributes: {
-        class: 'prose max-w-none p-6 focus:outline-none text-gray-800 text-base leading-relaxed',
+        class:
+          'prose prose-slate max-w-none focus:outline-none min-h-[100dvh] px-5 py-6 sm:px-8 sm:py-10 text-gray-900 text-[16px] leading-7',
       },
     },
   })
 
-  // GSAP stagger on toolbar buttons
-  useEffect(() => {
-    if (!toolbarRef.current) return
-    const btns = toolbarRef.current.querySelectorAll('button, .divider-anim')
-    gsap.fromTo(
-      btns,
-      { opacity: 0, y: -10 },
-      { opacity: 1, y: 0, duration: 0.35, stagger: 0.04, ease: 'power2.out', delay: 0.5 }
-    )
-  }, [])
-
   if (!editor) return null
 
-  const groups = [
-    // Text style
-    [
-      { icon: <Bold size={16} />,           title: 'Negrita (Ctrl+B)',  fn: () => editor.chain().focus().toggleBold().run(),          active: editor.isActive('bold') },
-      { icon: <Italic size={16} />,         title: 'Cursiva (Ctrl+I)', fn: () => editor.chain().focus().toggleItalic().run(),        active: editor.isActive('italic') },
-      { icon: <UnderlineIcon size={16} />,  title: 'Subrayado',        fn: () => editor.chain().focus().toggleUnderline().run(),     active: editor.isActive('underline') },
-      { icon: <Strikethrough size={16} />,  title: 'Tachado',          fn: () => editor.chain().focus().toggleStrike().run(),        active: editor.isActive('strike') },
-    ],
-    // Headings
-    [
-      { icon: <Heading1 size={16} />, title: 'Título 1', fn: () => editor.chain().focus().toggleHeading({ level: 1 }).run(), active: editor.isActive('heading', { level: 1 }) },
-      { icon: <Heading2 size={16} />, title: 'Título 2', fn: () => editor.chain().focus().toggleHeading({ level: 2 }).run(), active: editor.isActive('heading', { level: 2 }) },
-      { icon: <Heading3 size={16} />, title: 'Título 3', fn: () => editor.chain().focus().toggleHeading({ level: 3 }).run(), active: editor.isActive('heading', { level: 3 }) },
-    ],
-    // Alignment
-    [
-      { icon: <AlignLeft size={16} />,    title: 'Izquierda', fn: () => editor.chain().focus().setTextAlign('left').run(),    active: editor.isActive({ textAlign: 'left' }) },
-      { icon: <AlignCenter size={16} />,  title: 'Centrar',   fn: () => editor.chain().focus().setTextAlign('center').run(),  active: editor.isActive({ textAlign: 'center' }) },
-      { icon: <AlignRight size={16} />,   title: 'Derecha',   fn: () => editor.chain().focus().setTextAlign('right').run(),   active: editor.isActive({ textAlign: 'right' }) },
-      { icon: <AlignJustify size={16} />, title: 'Justificar',fn: () => editor.chain().focus().setTextAlign('justify').run(), active: editor.isActive({ textAlign: 'justify' }) },
-    ],
-    // Lists
-    [
-      { icon: <List size={16} />,        title: 'Lista',          fn: () => editor.chain().focus().toggleBulletList().run(),  active: editor.isActive('bulletList') },
-      { icon: <ListOrdered size={16} />, title: 'Lista numerada', fn: () => editor.chain().focus().toggleOrderedList().run(), active: editor.isActive('orderedList') },
-    ],
-    // History
-    [
-      { icon: <Undo2 size={16} />, title: 'Deshacer (Ctrl+Z)', fn: () => editor.chain().focus().undo().run(), active: false },
-      { icon: <Redo2 size={16} />, title: 'Rehacer (Ctrl+Y)',  fn: () => editor.chain().focus().redo().run(), active: false },
-    ],
-  ]
-
   return (
-    <div className="bg-white rounded-2xl shadow-2xl overflow-hidden border border-indigo-100">
-      {/* Toolbar */}
-      <div
-        ref={toolbarRef}
-        className="flex flex-wrap items-center gap-1 px-4 py-3 border-b border-gray-100 bg-gray-50"
-      >
-        {groups.map((group, gi) => (
-          <div key={gi} className="flex items-center gap-1">
-            {gi > 0 && <Divider />}
-            {group.map((item, i) => (
-              <Btn key={i} onClick={item.fn} active={item.active} title={item.title}>
-                {item.icon}
-              </Btn>
-            ))}
-          </div>
-        ))}
-      </div>
+    <div className="min-h-[100dvh] bg-white text-gray-900">
+      <div className="mx-auto flex min-h-[100dvh] w-full max-w-5xl flex-col">
+        {!compact && (
+          <header className="sticky top-0 z-20 border-b border-gray-200 bg-white/90 backdrop-blur">
+            <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-6">
+              <div className="flex flex-wrap items-center gap-1">
+                <Btn
+                  title="Negrita"
+                  active={editor.isActive('bold')}
+                  onClick={() => editor.chain().focus().toggleBold().run()}
+                >
+                  <Bold size={16} />
+                </Btn>
+                <Btn
+                  title="Cursiva"
+                  active={editor.isActive('italic')}
+                  onClick={() => editor.chain().focus().toggleItalic().run()}
+                >
+                  <Italic size={16} />
+                </Btn>
+                <Btn
+                  title="Tachado"
+                  active={editor.isActive('strike')}
+                  onClick={() => editor.chain().focus().toggleStrike().run()}
+                >
+                  <Strikethrough size={16} />
+                </Btn>
 
-      {/* Editor area */}
-      <EditorContent editor={editor} />
+                <span className="mx-2 h-6 w-px bg-gray-200" />
 
-      {/* Footer */}
-      <div className="px-6 py-2 border-t border-gray-100 bg-gray-50 flex justify-between text-xs text-gray-400">
-        <span>TipTap + GSAP + Tailwind</span>
-        <span>{editor.storage.characterCount?.characters?.() ?? ''}</span>
+                <Btn
+                  title="H1"
+                  active={editor.isActive('heading', { level: 1 })}
+                  onClick={() =>
+                    editor.chain().focus().toggleHeading({ level: 1 }).run()
+                  }
+                >
+                  <Heading1 size={16} />
+                </Btn>
+                <Btn
+                  title="H2"
+                  active={editor.isActive('heading', { level: 2 })}
+                  onClick={() =>
+                    editor.chain().focus().toggleHeading({ level: 2 }).run()
+                  }
+                >
+                  <Heading2 size={16} />
+                </Btn>
+                <Btn
+                  title="Lista"
+                  active={editor.isActive('bulletList')}
+                  onClick={() => editor.chain().focus().toggleBulletList().run()}
+                >
+                  <List size={16} />
+                </Btn>
+                <Btn
+                  title="Lista numerada"
+                  active={editor.isActive('orderedList')}
+                  onClick={() => editor.chain().focus().toggleOrderedList().run()}
+                >
+                  <ListOrdered size={16} />
+                </Btn>
+
+                <span className="mx-2 h-6 w-px bg-gray-200" />
+
+                <Btn
+                  title="Izquierda"
+                  active={editor.isActive({ textAlign: 'left' })}
+                  onClick={() => editor.chain().focus().setTextAlign('left').run()}
+                >
+                  <AlignLeft size={16} />
+                </Btn>
+                <Btn
+                  title="Centro"
+                  active={editor.isActive({ textAlign: 'center' })}
+                  onClick={() => editor.chain().focus().setTextAlign('center').run()}
+                >
+                  <AlignCenter size={16} />
+                </Btn>
+                <Btn
+                  title="Derecha"
+                  active={editor.isActive({ textAlign: 'right' })}
+                  onClick={() => editor.chain().focus().setTextAlign('right').run()}
+                >
+                  <AlignRight size={16} />
+                </Btn>
+                <Btn
+                  title="Justificado"
+                  active={editor.isActive({ textAlign: 'justify' })}
+                  onClick={() => editor.chain().focus().setTextAlign('justify').run()}
+                >
+                  <AlignJustify size={16} />
+                </Btn>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setCompact(true)}
+                className="inline-flex h-9 items-center gap-2 rounded-lg border border-gray-200 px-3 text-sm text-gray-700 hover:bg-gray-50"
+              >
+                <EyeOff size={16} />
+                Modo lectura
+              </button>
+            </div>
+          </header>
+        )}
+
+        {compact && (
+          <button
+            type="button"
+            onClick={() => setCompact(false)}
+            className="fixed right-4 top-4 z-30 inline-flex h-10 items-center gap-2 rounded-full border border-gray-200 bg-white px-4 text-sm shadow-sm"
+          >
+            <Eye size={16} />
+            Mostrar barra
+          </button>
+        )}
+
+        <main className="flex-1">
+          <EditorContent editor={editor} />
+        </main>
       </div>
     </div>
   )

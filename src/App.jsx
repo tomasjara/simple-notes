@@ -23,19 +23,10 @@ export default function App() {
   }, [])
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 flex flex-col items-center py-12 px-4">
-      {/* Header */}
-      <div ref={headerRef} className="mb-8 text-center opacity-0">
-        <h1 className="text-4xl font-bold text-white tracking-tight">
-          ✏️ Editor de Texto
-        </h1>
-        <p className="text-indigo-300 mt-2 text-sm">
-          React · TipTap · GSAP · Tailwind CSS
-        </p>
-      </div>
-
-      {/* Editor card */}
-      <div ref={editorRef} className="w-full max-w-4xl opacity-0">
+    // <div className="min-h-screen bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 flex flex-col items-center py-12 px-4">
+    <div >
+      {/* <div ref={editorRef} className="w-full max-w-4xl opacity-0"> */}
+      <div ref={editorRef} >
         <Editor />
       </div>
     </div>
