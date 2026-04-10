@@ -6,6 +6,15 @@ export default {
       fontFamily: {
         sans: ['Inter', 'sans-serif'],
       },
+      colors: {
+        theme: {
+          bg: 'var(--color-bg)',
+          fg: 'var(--color-fg)',
+          'fg-muted': 'var(--color-fg-muted)',
+          border: 'var(--color-border)',
+          surface: 'var(--color-surface)',
+        },
+      },
     },
   },
   plugins: [],

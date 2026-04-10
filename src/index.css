@@ -2,10 +2,41 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+ * Cada tema define solo 2 colores base (--color-bg, --color-fg).
+ * El resto se deriva con color-mix para bordes, superficies y texto secundario.
+ */
+[data-theme='light'] {
+  --color-bg: #fafafa;
+  --color-fg: #0f172a;
+}
+
+[data-theme='dark'] {
+  --color-bg: #0f172a;
+  --color-fg: #f1f5f9;
+}
+
+[data-theme='midnight'] {
+  --color-bg: #050816;
+  --color-fg: #c7d2fe;
+}
+
+[data-theme] {
+  --color-fg-muted: color-mix(in srgb, var(--color-fg) 58%, var(--color-bg));
+  --color-border: color-mix(in srgb, var(--color-fg) 14%, var(--color-bg));
+  --color-surface: color-mix(in srgb, var(--color-fg) 5%, var(--color-bg));
+}
+
+html {
+  background-color: var(--color-bg);
+  color: var(--color-fg);
+}
+
 /* TipTap editor base styles */
 .ProseMirror {
   outline: none;
   min-height: 400px;
+  color: var(--color-fg);
 }
 
 .ProseMirror p {
@@ -27,10 +58,12 @@
 /* Placeholder */
 .ProseMirror p.is-editor-empty:first-child::before {
   content: attr(data-placeholder);
-  @apply text-gray-400 pointer-events-none float-left h-0;
+  color: var(--color-fg-muted);
+  @apply pointer-events-none float-left h-0;
 }
 
-/* Toolbar button active state */
+/* Toolbar button active state (clase opcional en tema) */
 .toolbar-btn.is-active {
-  @apply bg-indigo-100 text-indigo-700;
+  background-color: var(--color-fg);
+  color: var(--color-bg);
 }

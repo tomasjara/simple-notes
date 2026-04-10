@@ -1,6 +1,18 @@
 <!DOCTYPE html>
 <html lang="es">
   <head>
+    <script>
+      (function () {
+        try {
+          var t = localStorage.getItem('app-theme')
+          if (t === 'light' || t === 'dark' || t === 'midnight')
+            document.documentElement.setAttribute('data-theme', t)
+          else document.documentElement.setAttribute('data-theme', 'light')
+        } catch (e) {
+          document.documentElement.setAttribute('data-theme', 'light')
+        }
+      })()
+    </script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Editor de Texto</title>
